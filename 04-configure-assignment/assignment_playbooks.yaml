@@ -1,0 +1,104 @@
+---
+- name:  Display Cisco info
+  hosts: cisco
+  gather_facts: no
+ 
+  tasks:
+    - name: Configure Router Name
+      cisco.ios.ios_hostname:
+        config:
+          hostname: Router1
+        state: merged
+ 
+    - name: Configure the login banner
+      cisco.ios.ios_banner:
+        banner: login
+        text: |
+          this is my login banner
+          that contains a multiline
+          string
+        state: present
+ 
+    - name: Configure Host logging
+      cisco.ios.ios_logging:
+        dest: host
+        name: 8.8.8.8
+        state: present
+    
+    - name: Configure NTP
+      cisco.ios.ios_ntp:
+        server: 8.8.8.8
+        source_int: GigabitEthernet1
+        logging: false
+        state: present
+    
+    - name: Configure Domain Name
+      cisco.ios.ios_system:
+        domain_name: test.example.com
+        domain_search:
+        - ansible.com
+        - redhat.com
+        - cisco.com
+
+
+    - name: OSPF Interfaces configuration
+      cisco.ios.ios_ospf_interfaces:
+        config:
+          - name: GigabitEthernet1
+            address_family:
+              - afi: ipv4
+                process:
+                  id: 10
+                  area_id: 30
+                adjacency: true
+                bfd: true
+                cost:
+                  interface_cost: 5
+                dead_interval:
+                  time: 5
+                demand_circuit:
+                  ignore: true
+                network:
+                  broadcast: true
+                priority: 25
+                resync_timeout: 10
+                shutdown: true
+                ttl_security:
+                  hops: 50
+              - afi: ipv6
+                process:
+                  id: 35
+                  area_id: 45
+                adjacency: true
+                database_filter: true
+                manet:
+                  link_metrics:
+                    cost_threshold: 10
+                priority: 55
+                transmit_delay: 45
+        state: merged
+ 
+    - name: SNMP Configuration
+      cisco.ios.ios_snmp_server:
+        config:
+          location: 'location entry for snmp'
+          packet_size: 500
+          communities:
+            - acl_v4: acl_uq
+              name: communityOverriden
+              rw: true
+        state: overridden
+
+    - name: Merge provided configuration with device configuration
+      cisco.ios.ios_l3_interfaces:
+        config:
+        - name: GigabitEthernet0/1
+          ipv4:
+          - address: 192.168.0.18/24
+        - name: GigabitEthernet0/2
+          ipv4:
+          - address: 192.168.0.22/24
+        - name: GigabitEthernet0/3
+          ipv4:
+          - address: 192.168.0.23/24
+        state: replaced
